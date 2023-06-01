@@ -1,92 +1,92 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import os
 
-class VigenereCipherGUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Vigenere Cipher")
-        
-        self.create_widgets()
-        
-    def create_widgets(self):
-        self.label_text = tk.Label(self.root, text="Enter the text:")
-        self.label_text.pack()
-        
-        self.text_entry = tk.Entry(self.root, width=50)
-        self.text_entry.pack()
-        
-        self.label_key = tk.Label(self.root, text="Enter the key:")
-        self.label_key.pack()
-        
-        self.key_entry = tk.Entry(self.root, width=50)
-        self.key_entry.pack()
-        
-        self.encrypt_button = tk.Button(self.root, text="Encrypt", command=self.encrypt_text)
-        self.encrypt_button.pack()
-        
-        self.decrypt_button = tk.Button(self.root, text="Decrypt", command=self.decrypt_text)
-        self.decrypt_button.pack()
-        
-        self.save_button = tk.Button(self.root, text="Save to File", command=self.save_to_file)
-        self.save_button.pack()
-        
-    def encrypt_text(self):
-        plaintext = self.text_entry.get()
-        key = self.key_entry.get()
-        ciphertext = self.vigenere_encrypt(plaintext, key)
-        messagebox.showinfo("Encryption Result", "Ciphertext: " + ciphertext)
-        
-    def decrypt_text(self):
-        ciphertext = self.text_entry.get()
-        key = self.key_entry.get()
-        plaintext = self.vigenere_decrypt(ciphertext, key)
-        messagebox.showinfo("Decryption Result", "Plaintext: " + plaintext)
-        
-    def save_to_file(self):
-        ciphertext = self.text_entry.get()
-        save_path = filedialog.asksaveasfilename(defaultextension=".txt")
-        
+# Fungsi untuk enkripsi teks menggunakan Vigenere cipher
+def encrypt(plain_text, key):
+    encrypted_text = ""
+    key_length = len(key)
+    for i, char in enumerate(plain_text):
+        key_index = i % key_length
+        key_char = key[key_index]
+        if char.isalpha():
+            char = chr((ord(char.upper()) + ord(key_char.upper()) - 2 * ord('A')) % 26 + ord('A'))
+        encrypted_text += char
+    return encrypted_text
+
+# Fungsi untuk membuka file teks
+def open_file():
+    file_path = filedialog.askopenfilename(filetypes=[('Text files', '*.txt')])
+    if file_path:
         try:
-            with open(save_path, "w") as file:
-                file.write(ciphertext)
-            messagebox.showinfo("Save to File", "File saved successfully.")
-        except OSError:
-            messagebox.showerror("Save to File", "Failed to save file. Folder not found.")
-        
-    def vigenere_encrypt(self, text, key):
-        encrypted_text = ""
-        key_len = len(key)
-        for i in range(len(text)):
-            char = text[i]
-            if char.isalpha():
-                key_char = key[i % key_len].upper()
-                if char.islower():
-                    encrypted_char = chr((ord(char) - 97 + ord(key_char) - 65) % 26 + 97)
-                else:
-                    encrypted_char = chr((ord(char) - 65 + ord(key_char) - 65) % 26 + 65)
-                encrypted_text += encrypted_char
-            else:
-                encrypted_text += char
-        return encrypted_text
-    
-    def vigenere_decrypt(self, text, key):
-        decrypted_text = ""
-        key_len = len(key)
-        for i in range(len(text)):
-            char = text[i]
-            if char.isalpha():
-                key_char = key[i % key_len].upper()
-                if char.islower():
-                    decrypted_char = chr((ord(char) - 97 - ord(key_char) + 65) % 26 + 97)
-                else:
-                    decrypted_char = chr((ord(char) - 65 - ord(key_char) + 65) % 26 + 65)
-                decrypted_text += decrypted_char
-            else:
-                decrypted_text += char
-        return decrypted_text
+            with open(file_path, 'r') as file:
+                text = file.read()
+            text_entry.delete('1.0', tk.END)
+            text_entry.insert(tk.END, text)
+        except Exception as e:
+            messagebox.showerror('Error', f'Failed to open file: {str(e)}')
 
+# Fungsi untuk menyimpan file hasil enkripsi
+def save_file(encrypted_text):
+    file_path = filedialog.asksaveasfilename(filetypes=[('Text files', '*.txt')])
+    if file_path:
+        try:
+            with open(file_path, 'w') as file:
+                file.write(encrypted_text)
+            messagebox.showinfo('Success', 'File saved successfully.')
+        except Exception as e:
+            messagebox.showerror('Error', f'Failed to save file: {str(e)}')
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = VigenereCipherGUI(root)
-    root.mainloop()
+# Fungsi untuk mengenkripsi teks saat tombol "Encrypt" ditekan
+def encrypt_text():
+    text = text_entry.get('1.0', tk.END).strip()
+    key = key_entry.get().strip()
+    if not text or not key:
+        messagebox.showwarning('Warning', 'Please enter text and key.')
+        return
+    encrypted_text = encrypt(text, key)
+    save_file(encrypted_text)
+
+# Inisialisasi GUI
+root = tk.Tk()
+root.title('Vigenere Cipher')
+root.geometry('400x300')
+
+# Frame utama
+main_frame = tk.Frame(root)
+main_frame.pack(padx=20, pady=20)
+
+# Label untuk judul
+title_label = tk.Label(main_frame, text='Vigenere Cipher', font=('Helvetica', 16, 'bold'))
+title_label.pack(pady=10)
+
+# Frame untuk input teks
+text_frame = tk.Frame(main_frame)
+text_frame.pack(pady=10)
+
+# Label dan Textbox untuk teks
+text_label = tk.Label(text_frame, text='Text:')
+text_label.pack(side=tk.LEFT)
+text_entry = tk.Text(text_frame, height=5, width=30)
+text_entry.pack(side=tk.LEFT)
+
+# Frame untuk input key
+key_frame = tk.Frame(main_frame)
+key_frame.pack(pady=10)
+
+# Label dan Textbox untuk key
+key_label = tk.Label(key_frame, text='Key:')
+key_label.pack(side=tk.LEFT)
+key_entry = tk.Entry(key_frame, width=30)
+key_entry.pack(side=tk.LEFT)
+
+# Tombol untuk membuka file
+open_button = tk.Button(main_frame, text='Open File', command=open_file)
+open_button.pack(pady=5)
+
+# Tombol untuk mengenkripsi teks
+encrypt_button = tk.Button(main_frame, text='Encrypt', command=encrypt_text)
+encrypt_button.pack(pady=5)
+
+# Jalankan GUI
+root.mainloop()
